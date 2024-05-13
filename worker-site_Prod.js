@@ -5,40 +5,88 @@ const app = express()
 app.use(express.json());   
 app.use(express.urlencoded({ extended: true })); 
 
-const id = workerData.id; 
-const hostIP = workerData.hostIP;
-const hostname = workerData.hostname;
-const HTTPport = workerData.HTTPport; 
-const HTTPchildPort = workerData.HTTPchildPort; 
 
-//Machine d'état Demandeur / Dehors / Dedans
-let status = "dehors";
+const hl = 0; // Heure locale
+const he = 0; // Heure Externe
+const debprod = 0;
+const finprod = 0;
+const ifincons = 0;
 
- 
+const table = []
+
+const req_en_cours = false;
+const sc_en_cours = false;
+
+const t = 0;
+while( t<m){
+  table.push( [rel, 0]);
+  t+=1;
+}
+
+
 
 app.post('/token', (req, res) => {
-    const token = req.body;
-    tokenReceived(token);
-    res.status(200).send({'message':'received token'})
-  })
+
+  // RECEPTION D'UN MESSAGE DE TYPE REQ
+  const value = req.body.request_obj;
+  
+  if(value.getType() == "REQ"){ // RECEPTION D'UN REQ
+    maj_h(hl, value.getHorloge())
+    hl += 1
+    // Envoie ACK ! TO DO 
+    table[value.getIndice()] = ["REQ", this.he];
+  }
+  else if(value.getType() == "ACK"){ // RECEPTION D'UN ACK
+    maj_h(hl, value.getHorloge())
+
+    if( tab[value.getIndice()][0] != "ACK"){
+      table[value.getIndice()] = ["ACK", this.he]
+    }
+  }
+  else if(value.getType() == "REL"){ // RECEPTION D'UN REL
+    maj_h(hl, value.getHorloge())
+    table[value.getIndice()] = ["REL", this.he];
+    debprod += 1;
+    finprod += 1;
+  } else if ( !req_en_cours && value.getType() == "BSC")
+  res.send('Hello World!')
+})
+
+app.get('/', (req, res) => {
+})
 
 
-  app.get('/', (req, res) => {
-    res.send('Hello World!')
-  })
 
 
+
+
+
+ 
 app.listen(HTTPport, () => {
     console.log(`Worker Site number ${id} is running on http://${hostname}:${HTTPport}`)
   })
   
+  
+  /* procédure permettant de diffuser à l’ensemble des autres contrôleurs un message msg (hl, i). Ce message est de type req ou rel. */
+  function diffuser(msg, hl, i ){
 
+  }
 
+  /* procédure permettant de mettre à jour l’horloge locale hl d’une date he reçue via une estampille */
+  function maj_h(hl ,he){
+
+  }
+
+  /* renvoie l’identifiant du processus ayant la plus vielle date dans le tableau tab */
+  function plus_vieille_date(tab){
+
+  }
+
+/*
 async function start(){
         await cruise();
         await start()
 }
-
 async function tokenReceived(token){
   switch(status){
     case 'demandeur':
@@ -60,8 +108,6 @@ async function tokenReceived(token){
   }
 
 }
-
-
 async function cross(){
     const deb = new Date();
     return new Promise((resolve, reject)=>{
@@ -74,9 +120,6 @@ async function cross(){
       )
     })
   }
-  
-  
-  
   async function cruise(){
     return new Promise((resolve, reject)=>{
       setTimeout(()=>{
@@ -88,9 +131,7 @@ async function cross(){
       )
     })
   
-  }
-  
-  
+  } 
   async function sendToken(token){
     const response = await fetch(
         `http://${hostname}:${HTTPchildPort}/token`,
@@ -103,10 +144,7 @@ async function cross(){
     const data = await response.json();
     console.log(`${id} (${HTTPport}) has just send a token to ${HTTPchildPort} `)
   }
-
-  async function sharedArrayBuffer(){
-    
-  }
-
+*/
+ 
 
 start();

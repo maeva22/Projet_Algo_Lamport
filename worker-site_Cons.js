@@ -1,3 +1,6 @@
+//Code du controller de Consomation
+require("./request-obj.js")
+
 const { parentPort, workerData } = require('worker_threads')
 
 const express = require('express')
@@ -5,40 +8,96 @@ const app = express()
 app.use(express.json());   
 app.use(express.urlencoded({ extended: true })); 
 
-const id = workerData.id; 
-const hostIP = workerData.hostIP;
-const hostname = workerData.hostname;
-const HTTPport = workerData.HTTPport; 
-const HTTPchildPort = workerData.HTTPchildPort; 
+// Data du worker
+const debcons = 0;
+const fincons = 0;
+const ifinprod = 0;
 
-//Machine d'état Demandeur / Dehors / Dedans
-let status = "dehors";
+const req_en_cours = false;
+const sc_en_cours = false;
 
- 
 
 app.post('/token', (req, res) => {
-    const token = req.body;
-    tokenReceived(token);
-    res.status(200).send({'message':'received token'})
-  })
+  // ACQUISITION
+  if( !req_en_cours ){ // and cons besoni_sc verif avec la request )
+    req_en_cours = true;
+  }
+
+  // SECTION CRITIQUE
+  if( req_en_cours && ! sc_en_cours && debcons-ifinprod < 0){
+    debcons += 1;
+    Msg_dbt_sc();
+    sc_en_cours = true;
+  }
 
 
-  app.get('/', (req, res) => {
-    res.send('Hello World!')
-  })
+  // LIBERATION
+
+  if( req_en_cours && sc_en_cours ){ //&& cons ? fin_sc())
+    fincons += 1;
+    K = 1;
+    while ( k < n+1){
+      // asynch producteur P[K] !! màj (fincons);
+      k +=1;
+    }
+    sc_en_cours = false;
+    req_en_cours = false;
+
+    // Launch liberation
+    Msg_Rel();
+
+    // Launche request in Aleatory time
+    setTimeout(()=>{request_aleatoire()}, Math.floor(Math.random()*10000))
+  }
+
+  // RECEPTION DE IFINPROD
+  // Màj ifinprod
+
+  if ( /* recois requête type  REQ */ false){
+    //Envoies ACk
+  }
+
+})
+
+ 
+// Function worker Controller
+app.get('/', (req, res) => {})
 
 
-app.listen(HTTPport, () => {
-    console.log(`Worker Site number ${id} is running on http://${hostname}:${HTTPport}`)
-  })
-  
 
 
+app.listen(HTTPport, () => {})
+
+
+
+
+
+
+function request_aleatoire(){
+  if(!req_en_cours){
+
+    // send REQ !!! 
+
+  }
+}
+ 
+
+function Msg_dbt_sc(){
+  // TO DO ! 
+
+  // Prévien qu'on utilise SC ! 
+
+}
+
+function Msg_Rel(){
+
+}
+
+/*
 async function start(){
         await cruise();
         await start()
 }
-
 async function tokenReceived(token){
   switch(status){
     case 'demandeur':
@@ -60,8 +119,6 @@ async function tokenReceived(token){
   }
 
 }
-
-
 async function cross(){
     const deb = new Date();
     return new Promise((resolve, reject)=>{
@@ -73,11 +130,8 @@ async function cross(){
         Math.floor(Math.random()*10000)
       )
     })
-  }
-  
-  
-  
-  async function cruise(){
+}  
+async function cruise(){
     return new Promise((resolve, reject)=>{
       setTimeout(()=>{
           resolve();
@@ -88,10 +142,8 @@ async function cross(){
       )
     })
   
-  }
-  
-  
-  async function sendToken(token){
+}  
+async function sendToken(token){
     const response = await fetch(
         `http://${hostname}:${HTTPchildPort}/token`,
         {
@@ -102,11 +154,7 @@ async function cross(){
     );
     const data = await response.json();
     console.log(`${id} (${HTTPport}) has just send a token to ${HTTPchildPort} `)
-  }
-
-  async function sharedArrayBuffer(){
-    
-  }
-
+}
+*/
 
 start();
