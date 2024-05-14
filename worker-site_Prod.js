@@ -5,51 +5,82 @@ const app = express()
 app.use(express.json());   
 app.use(express.urlencoded({ extended: true })); 
 
+// Connexion Data
+const HTTPport = workerData.HTTPport; 
+const HTTPchildPort = workerData.HTTPchildPort; 
 
+const i = workerData.id; // Indice du producteur
 const hl = 0; // Heure locale
 const he = 0; // Heure Externe
 const debprod = 0;
 const finprod = 0;
 const ifincons = 0;
 
-const table = []
+const table = workerData.Table;
 
 const req_en_cours = false;
 const sc_en_cours = false;
 
-const t = 0;
-while( t<m){
-  table.push( [rel, 0]);
-  t+=1;
-}
-
-
 
 app.post('/token', (req, res) => {
 
-  // RECEPTION D'UN MESSAGE DE TYPE REQ
   const value = req.body.request_obj;
   
-  if(value.getType() == "REQ"){ // RECEPTION D'UN REQ
+  // RECEPTION D'UN REQ
+  if(value.getType() == "REQ"){ 
     maj_h(hl, value.getHorloge())
     hl += 1
     // Envoie ACK ! TO DO 
     table[value.getIndice()] = ["REQ", this.he];
   }
-  else if(value.getType() == "ACK"){ // RECEPTION D'UN ACK
+
+  // RECEPTION D'UN ACK
+  else if(value.getType() == "ACK"){ 
     maj_h(hl, value.getHorloge())
 
     if( tab[value.getIndice()][0] != "ACK"){
       table[value.getIndice()] = ["ACK", this.he]
     }
   }
-  else if(value.getType() == "REL"){ // RECEPTION D'UN REL
+
+  // RECEPTION D'UN REL
+  else if(value.getType() == "REL"){ 
     maj_h(hl, value.getHorloge())
     table[value.getIndice()] = ["REL", this.he];
     debprod += 1;
     finprod += 1;
-  } else if ( !req_en_cours && value.getType() == "BSC")
-  res.send('Hello World!')
+  } 
+  
+   // ACQUISITION
+  else if ( !req_en_cours && value.getType() == "BSC"){
+    this.hl +=1;
+    req_en_cours = true;
+    diffuser("REQ", this.hl,i);
+    table[i] = ["REQ", this.hl]
+  }
+  
+  // SECTION CRITIQUE
+  else if( req_en_cours && !sc_en_cours && plus_vieille_date(table) == i && debprod - ifincons < n ){ 
+      debprod += 1;
+      // prod[i] debut_sc
+      sc_en_cours = true;
+  }
+  
+  // Liberation
+  else if( req_en_cours && sc_en_cours && value.getType() == "FINSC" ){ 
+    finprod += 1;
+    // C !! maje(finprod),
+    sc_en_cours = false;
+    hl += 1
+    diffuser("REL", hl,i);
+    table[i] = ["REL", hl];
+    req_en_cours = false
+  }
+  
+  // Mise a jour
+  else if( value.getType()=="MAJ" ){
+    // mise a jour
+  }
 })
 
 app.get('/', (req, res) => {
@@ -57,36 +88,46 @@ app.get('/', (req, res) => {
 
 
 
-
-
-
-
- 
 app.listen(HTTPport, () => {
     console.log(`Worker Site number ${id} is running on http://${hostname}:${HTTPport}`)
   })
   
   
-  /* procédure permettant de diffuser à l’ensemble des autres contrôleurs un message msg (hl, i). Ce message est de type req ou rel. */
-  function diffuser(msg, hl, i ){
+/* procédure permettant de diffuser à l’ensemble des autres contrôleurs un message msg (hl, i). Ce message est de type req ou rel. */
+ function diffuser(msg, hl, i ){}
 
-  }
+/* procédure permettant de mettre à jour l’horloge locale hl d’une date he reçue via une estampille */
+function maj_h(hl ,he){
 
-  /* procédure permettant de mettre à jour l’horloge locale hl d’une date he reçue via une estampille */
-  function maj_h(hl ,he){
+  
+}
 
-  }
+/* renvoie l’identifiant du processus ayant la plus vielle date dans le tableau tab */
+function plus_vieille_date(tab){ // A vérifier
+  let val = tab[0][1]
+  let minElement = tab[0]
 
-  /* renvoie l’identifiant du processus ayant la plus vielle date dans le tableau tab */
-  function plus_vieille_date(tab){
+  tab.foreach((element) =>{
+    if(element[1] < val){
+      val = element[1]
+      minElement = element
+    }
 
-  }
+  return tab.getIndice(minElement)
+
+  })
+
+
+}
+
+function start(){
+  
+  setTimeout( start() , 10000 );
+}
+
 
 /*
-async function start(){
-        await cruise();
-        await start()
-}
+
 async function tokenReceived(token){
   switch(status){
     case 'demandeur':

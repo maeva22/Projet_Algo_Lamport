@@ -8,6 +8,10 @@ const app = express()
 app.use(express.json());   
 app.use(express.urlencoded({ extended: true })); 
 
+// Connexion Data
+const HTTPport = workerData.HTTPport; 
+const HTTPchildPort = workerData.HTTPchildPort; 
+
 // Data du worker
 const debcons = 0;
 const fincons = 0;
@@ -16,10 +20,16 @@ const ifinprod = 0;
 const req_en_cours = false;
 const sc_en_cours = false;
 
+const table = workerData.Table;
+
 
 app.post('/token', (req, res) => {
+  
+  const value = req.body.request_obj;
+
+  
   // ACQUISITION
-  if( !req_en_cours ){ // and cons besoni_sc verif avec la request )
+  if( !req_en_cours && value.getType()=="BSC" ){ // and cons besoni_sc verif avec la request )
     req_en_cours = true;
   }
 
@@ -33,7 +43,7 @@ app.post('/token', (req, res) => {
 
   // LIBERATION
 
-  if( req_en_cours && sc_en_cours ){ //&& cons ? fin_sc())
+  if( req_en_cours && sc_en_cours && value.getType()=="FINSC" ){ //&& cons ? fin_sc())
     fincons += 1;
     K = 1;
     while ( k < n+1){
@@ -49,9 +59,10 @@ app.post('/token', (req, res) => {
     // Launche request in Aleatory time
     setTimeout(()=>{request_aleatoire()}, Math.floor(Math.random()*10000))
   }
-
   // RECEPTION DE IFINPROD
-  // Màj ifinprod
+  if ( value.getType()=="MAJ"){
+    //Mise a jour 
+  }
 
   if ( /* recois requête type  REQ */ false){
     //Envoies ACk

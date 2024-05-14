@@ -23,7 +23,76 @@ class myWorker{
   }
 }
 
+class ArrayofWorkersCons extends Array{
+  constructor({numberOfWorkers,hostname, startPort}){
+    super()
+    this.numberOfWorkers = numberOfWorkers
+    super();
+    this.numberOfWorkers = numberOfWorkers;
+    this.hostname = hostname;
+    this.startPort = startPort;
 
+    let HTTPport = this.startPort;
+    let HTTPchildPort = this.startPort;
+
+    let Table = []
+    let t = 0;
+    while( t<m){
+     Table.push( [rel, 0]);
+     t+=1;
+    }
+
+    for(let id=0;  id<this.numberOfWorkers ; id++){
+      HTTPport = this.startPort + id;
+      if(id == this.numberOfWorkers-1){
+        HTTPchildPort = this.startPort;
+      }else{
+        HTTPchildPort = HTTPport+1;
+      }
+  
+     
+
+      const theWorker = new myWorker({id,HTTPport,HTTPchildPort, Table})
+      this.push(theWorker);
+
+    }
+  }
+  async init(){ // A vérifier
+    const sitesPromises = new Array();
+    this.forEach((site)=>{sitesPromises.push(site.init())})
+    Promise.all(sitesPromises).then(()=>{this.launch()})
+    setTimeout(()=>{this.harakiri()}, 100000);
+  }
+
+  harakiri(){
+    this.forEach((site)=>{site.worker.terminate()});
+  }
+  async launch(){
+    const token = {
+      type:'token',
+      payload:{
+        cpt:0
+      }
+    }
+
+    fetch(
+      `http://${this.hostname}:${this.startPort}/token`,
+      {
+          method: 'post',
+          body: JSON.stringify(token),
+          headers: {'Content-Type': 'application/json'}
+      }
+    )
+    .then((data)=>{
+      return data.json()
+    })
+    .then((respons)=>{
+      console.log(`main has just send a token to ${this.startPort}`);
+    })
+
+  }
+}
+/*
 class RingOfWorkers extends Array {
   constructor({numberOfWorkers, hostname, startPort}) {
       super();
@@ -40,11 +109,13 @@ class RingOfWorkers extends Array {
         }else{
           HTTPchildPort = HTTPport+1;
         }
-        const theWorker = new myWorker({id,hostname:this.hostname,HTTPport,HTTPchildPort})
+        let conso = (id == this.numberOfWorkerss)
+        const theWorker = new myWorker({id,hostname:this.hostname,HTTPport,HTTPchildPort,conso,buffer})
         this.push(theWorker);
 
       }
   }
+
 
   async init(){
     const sitesPromises = new Array();
@@ -85,10 +156,10 @@ class RingOfWorkers extends Array {
 
 
 
-}
+}*/
 
 
-const myRingOfWorkers = new RingOfWorkers({numberOfWorkers:5,hostname, startPort:3000});
-myRingOfWorkers.init().then(()=>{console.log(`done`)})
+const myRingOfWorkers = new ArrayofWorkersCons({numberOfWorkers:5,hostname, startPort:3000});
+ArrayofWorkersCons.init().then(()=>{console.log(`done`)})
 
 
