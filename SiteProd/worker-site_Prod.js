@@ -7,10 +7,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 
 // Connexion Data
+const indice = workerData.id; // Indice du producteur
 const HTTPport = workerData.HTTPport; 
 const HTTPchildPort = workerData.HTTPchildPort; 
+const hostname = workerData.hostname;
+const startPort = workerData.startPort;
 
-const indice = workerData.id; // Indice du producteur
 const hl = 0; // Heure locale
 const he = 0; // Heure Externe
 const debprod = 0;
@@ -26,8 +28,8 @@ const sc_en_cours = false;
 app.post('/token', (req, res) => {
 
   const value = req.body.request_obj;
-  
-  // RECEPTION D'UN REQ
+  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement  
+     // RECEPTION D'UN REQ
   if(value.getType() == "REQ"){ 
     maj_h(hl, value.getHorloge())
     hl += 1
@@ -83,6 +85,11 @@ app.post('/token', (req, res) => {
   else if( value.getType()=="MAJ" ){
     maj_h(this.hl, value.getHorloge())
   }
+
+  }else{
+
+  }
+ 
 })
 
 app.get('/', (req, res) => {
@@ -91,7 +98,7 @@ app.get('/', (req, res) => {
 
 
 app.listen(HTTPport, () => {
-    console.log(`Worker Site number ${id} is running on http://${hostname}:${HTTPport}`)
+    console.log(`Worker Site Production number ${indice} is running on http://${hostname}:${HTTPport}`)
   })
   
   
@@ -167,8 +174,7 @@ function plus_vieille_date(tab){ // A vérifier
 }
 
 function start(){
-  
-  setTimeout( start() , 10000 );
+  setTimeout(()=>{start()},500)
 }
 
 

@@ -1,5 +1,5 @@
 //Code du controller de Consomation
-require("./request-obj.js")
+require( "../request-obj.js")
 
 const { parentPort, workerData } = require('worker_threads')
 
@@ -27,48 +27,57 @@ const table = workerData.Table;
 
 
 app.post('/token', (req, res) => {
-  
+ 
+
+
   const value = req.body.request_obj;
 
+  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement 
+    console.log(`Verif :  ${res} `)
   
-  // ACQUISITION
-  if( !req_en_cours && value.getType()=="BSC" ){ // and cons besoni_sc verif avec la request )
-    req_en_cours = true;
-  }
-
-  // SECTION CRITIQUE
-  if( req_en_cours && ! sc_en_cours && debcons-ifinprod < 0){
-    debcons += 1;
-    Msg_dbt_sc();
-    sc_en_cours = true;
-  }
-
-
-  // LIBERATION
-
-  if( req_en_cours && sc_en_cours && value.getType()=="FINSC" ){ //&& cons ? fin_sc())
-    fincons += 1;
-    K = 1;
-    while ( k < n+1){
-      send_maj(fincons,"fincons")
-      k +=1;
+    // ACQUISITION
+    if( !req_en_cours && value.getType()=="BSC" ){
+      req_en_cours = true;
     }
-    sc_en_cours = false;
-    req_en_cours = false;
+  
+    // SECTION CRITIQUE
+    if( req_en_cours && ! sc_en_cours && debcons-ifinprod < 0){
+      debcons += 1;
+      Msg_dbt_sc();
+      sc_en_cours = true;
+    }
+  
+  
+    // LIBERATION
+  
+    if( req_en_cours && sc_en_cours && value.getType()=="FINSC" ){ 
+      fincons += 1;
+      K = 1;
+      while ( k < n+1){
+        send_maj(fincons,"fincons")
+        k +=1;
+      }
+      sc_en_cours = false;
+      req_en_cours = false;
+  
+      // Launch liberation
+      // Msg_Rel(); vérifier si c'est bien a mettre ici ! 
+      // Launche request in Aleatory time
+      // SetTimeout(()=>{request_aleatoire()}, Math.floor(Math.random()*10000))
+    }
+    // RECEPTION DE IFINPROD
+    if ( value.getType()=="MAJ" && value.getInfo() == "ifinprod"){
+      this.ifinprod = value.getHorloge();
+    }
+  
+    if ( /* recois requête type  REQ */ false){
+      //Envoies ACk
+    }
 
-    // Launch liberation
-    // Msg_Rel(); vérifier si c'est bien a mettre ici ! 
-    // Launche request in Aleatory time
-    // SetTimeout(()=>{request_aleatoire()}, Math.floor(Math.random()*10000))
-  }
-  // RECEPTION DE IFINPROD
-  if ( value.getType()=="MAJ" && value.getInfo() == "ifinprod"){
-    this.ifinprod = value.getHorloge();
-  }
+  }else{ // premier lancement ! 
 
-  if ( /* recois requête type  REQ */ false){
-    //Envoies ACk
   }
+ 
 
 })
 
@@ -80,11 +89,8 @@ app.get('/', (req, res) => {})
 
 
 app.listen(HTTPport, () => {
-  console.log(`Worker Site number ${id} is running on http://${hostname}:${HTTPport}`)
+  console.log(`Worker Site Consomation number ${indice} is running on http://${hostname}:${HTTPport}`)
 })
-
-
-
 
 
 async function send_maj(newval, info){ // a vérifier
@@ -133,6 +139,11 @@ function Msg_dbt_sc(){
 
 function Msg_Rel(){
 
+}
+
+function start(){
+  setTimeout(()=>{start()},500)
+  
 }
 
 /*
