@@ -9,8 +9,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 
 // Connexion Data
+const indice = workerData.id; // Indice du producteur
 const HTTPport = workerData.HTTPport; 
 const HTTPchildPort = workerData.HTTPchildPort; 
+const hostname = workerData.hostname;
+const startPort = workerData.startPort;
 
 // Data du worker
 const debcons = 0;
@@ -47,21 +50,20 @@ app.post('/token', (req, res) => {
     fincons += 1;
     K = 1;
     while ( k < n+1){
-      // asynch producteur P[K] !! màj (fincons);
+      send_maj(fincons,"fincons")
       k +=1;
     }
     sc_en_cours = false;
     req_en_cours = false;
 
     // Launch liberation
-    Msg_Rel();
-
+    // Msg_Rel(); vérifier si c'est bien a mettre ici ! 
     // Launche request in Aleatory time
-    setTimeout(()=>{request_aleatoire()}, Math.floor(Math.random()*10000))
+    // SetTimeout(()=>{request_aleatoire()}, Math.floor(Math.random()*10000))
   }
   // RECEPTION DE IFINPROD
-  if ( value.getType()=="MAJ"){
-    //Mise a jour 
+  if ( value.getType()=="MAJ" && value.getInfo() == "ifinprod"){
+    this.ifinprod = value.getHorloge();
   }
 
   if ( /* recois requête type  REQ */ false){
@@ -82,6 +84,29 @@ app.listen(HTTPport, () => {})
 
 
 
+async function send_maj(newval, info){ // a vérifier
+
+  const token = new request_obj("MAJ",-1, newval, info)
+
+  for( let i =0; i < table.length; i++ ){
+     if( i != this.indice){
+      fetch(
+        `http://${this.hostname}:${this.startPort+i}/token`,
+        {
+            method: 'post',
+            body: JSON.stringify(token),
+            headers: {'Content-Type': 'application/json'}
+        }
+      )
+      .then((data)=>{
+        return data.json()
+      })
+      .then((respons)=>{
+        console.log(`Consomateur a just send to ${this.startPort+i} new value : ${info} at ${newval} `);
+      })
+     }
+  }
+}
 
 
 function request_aleatoire(){
@@ -95,6 +120,9 @@ function request_aleatoire(){
 
 function Msg_dbt_sc(){
   // TO DO ! 
+ 
+  // Controle ( worker ) envoie au consomateur ( intérieur du site )
+
 
   // Prévien qu'on utilise SC ! 
 

@@ -1,6 +1,7 @@
 const { parentPort, workerData } = require('worker_threads')
 
-const express = require('express')
+const express = require('express');
+const { Console } = require('console');
 const app = express()
 app.use(express.json());   
 app.use(express.urlencoded({ extended: true })); 
@@ -9,7 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 const HTTPport = workerData.HTTPport; 
 const HTTPchildPort = workerData.HTTPchildPort; 
 
-const i = workerData.id; // Indice du producteur
+const indice = workerData.id; // Indice du producteur
 const hl = 0; // Heure locale
 const he = 0; // Heure Externe
 const debprod = 0;
@@ -30,6 +31,7 @@ app.post('/token', (req, res) => {
   if(value.getType() == "REQ"){ 
     maj_h(hl, value.getHorloge())
     hl += 1
+    envoie_ack(value.getIndice())
     // Envoie ACK ! TO DO 
     table[value.getIndice()] = ["REQ", this.he];
   }
@@ -55,7 +57,7 @@ app.post('/token', (req, res) => {
   else if ( !req_en_cours && value.getType() == "BSC"){
     this.hl +=1;
     req_en_cours = true;
-    diffuser("REQ", this.hl,i);
+    diffuser("REQ", this.hl,this.indice);
     table[i] = ["REQ", this.hl]
   }
   
@@ -72,14 +74,14 @@ app.post('/token', (req, res) => {
     // C !! maje(finprod),
     sc_en_cours = false;
     hl += 1
-    diffuser("REL", hl,i);
+    diffuser("REL", this.hl,this.indice);
     table[i] = ["REL", hl];
     req_en_cours = false
   }
   
   // Mise a jour
   else if( value.getType()=="MAJ" ){
-    // mise a jour
+    maj_h(this.hl, value.getHorloge())
   }
 })
 
@@ -93,13 +95,57 @@ app.listen(HTTPport, () => {
   })
   
   
+function envoie_ack(indice){
+  const token = new request_obj("ACK",this.indice, hl, "")
+
+  fetch(
+    `http://${this.hostname}:${this.startPort+indice}/token`,
+    {
+        method: 'post',
+        body: JSON.stringify(token),
+        headers: {'Content-Type': 'application/json'}
+    }
+  )
+  .then((data)=>{
+    return data.json()
+  })
+  .then((respons)=>{
+    console.log(`Prod aknowledge ${this.startPort+indice}`);
+  })
+ }
+
+
 /* procédure permettant de diffuser à l’ensemble des autres contrôleurs un message msg (hl, i). Ce message est de type req ou rel. */
- function diffuser(msg, hl, i ){}
+ function diffuser(msg, hl, indice ){ // A vérifier on envoie nottament a prod a voir si c'est gérer
+
+  const token = new request_obj(msg,indice, hl, "")
+
+  for( let i =0; i < table.length; i++ ){
+     if( i != indice){
+      fetch(
+        `http://${this.hostname}:${this.startPort+i}/token`,
+        {
+            method: 'post',
+            body: JSON.stringify(token),
+            headers: {'Content-Type': 'application/json'}
+        }
+      )
+      .then((data)=>{
+        return data.json()
+      })
+      .then((respons)=>{
+        console.log(`Producteur a just send to ${this.startPort+i} new value : ${msg} at ${hl} `);
+      })
+     }
+  }
+
+
+ }
 
 /* procédure permettant de mettre à jour l’horloge locale hl d’une date he reçue via une estampille */
 function maj_h(hl ,he){
-
-  
+  console.log(`Update of horloge ${this.indice} hl : ${hl} / he : ${he} `);
+  if ( he > this.hl) this.hl = he;
 }
 
 /* renvoie l’identifiant du processus ayant la plus vielle date dans le tableau tab */
