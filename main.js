@@ -1,18 +1,24 @@
 const { Worker, workerData } = require('worker_threads');
 const os = require('os');
-const hostname = os.hostname();
+const { table } = require('console');
+const hostname = "127.0.0.1";//os.hostname();
+
+const nbprocessus= 3;
 
 
 class myWorker{
-  constructor({id,hostname,HTTPport,HTTPchildPort}){
+  constructor({id,hostname,HTTPport,HTTPchildPort, Table, startPort}){
     this.id = id;
     this.hostname = hostname;
     this.HTTPport = HTTPport;
     this.HTTPchildPort = HTTPchildPort;
+    this.Table = Table;
+    this.startPort = startPort
     this.worker = undefined;
   }
+
   async init(){
-    this.worker =  new Worker( `${__dirname}/worker-site.js`, {workerData: {id:this.id,  hostname:this.hostname, HTTPport:this.HTTPport, HTTPchildPort:this.HTTPchildPort}} );
+    this.worker =  new Worker( `${__dirname}/worker-site_Cons.js`, {workerData: {id:this.id, startPort:this.startPort, Table:this.Table, hostname:this.hostname, HTTPport:this.HTTPport, HTTPchildPort:this.HTTPchildPort}} );
     
     return new Promise((resolve,reject)=>{
       this.worker.on('online', 
@@ -26,9 +32,7 @@ class myWorker{
 class ArrayofWorkersCons extends Array{
   constructor({numberOfWorkers,hostname, startPort}){
     super()
-    this.numberOfWorkers = numberOfWorkers
-    super();
-    this.numberOfWorkers = numberOfWorkers;
+    this.ArrayofWorkersCons = ArrayofWorkersCons
     this.hostname = hostname;
     this.startPort = startPort;
 
@@ -37,8 +41,8 @@ class ArrayofWorkersCons extends Array{
 
     let Table = []
     let t = 0;
-    while( t<m){
-     Table.push( [rel, 0]);
+    while( t < nbprocessus){
+     Table.push( ["REL", 0]);
      t+=1;
     }
 
@@ -49,14 +53,12 @@ class ArrayofWorkersCons extends Array{
       }else{
         HTTPchildPort = HTTPport+1;
       }
-  
-     
-
-      const theWorker = new myWorker({id,HTTPport,HTTPchildPort, Table})
+      const theWorker = new myWorker({id,hostname,HTTPport,HTTPchildPort, Table, startPort})
       this.push(theWorker);
 
     }
   }
+
   async init(){ // A vérifier
     const sitesPromises = new Array();
     this.forEach((site)=>{sitesPromises.push(site.init())})
@@ -159,7 +161,7 @@ class RingOfWorkers extends Array {
 }*/
 
 
-const myRingOfWorkers = new ArrayofWorkersCons({numberOfWorkers:5,hostname, startPort:3000});
-ArrayofWorkersCons.init().then(()=>{console.log(`done`)})
+const ArrayofWorkers = new ArrayofWorkersCons({nbprocessus,hostname, startPort:3000});
+ArrayofWorkers.init().then(()=>{console.log(`done`)})
 
 
