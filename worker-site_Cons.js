@@ -79,7 +79,10 @@ app.get('/', (req, res) => {})
 
 
 
-app.listen(HTTPport, () => {})
+app.listen(HTTPport, () => {
+  console.log(`Worker Site number ${id} is running on http://${hostname}:${HTTPport}`)
+})
+
 
 
 

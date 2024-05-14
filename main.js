@@ -18,7 +18,7 @@ class myWorker{
   }
 
   async init(){
-    this.worker =  new Worker( `${__dirname}/worker-site_Cons.js`, {workerData: {id:this.id, startPort:this.startPort, Table:this.Table, hostname:this.hostname, HTTPport:this.HTTPport, HTTPchildPort:this.HTTPchildPort}} );
+    this.worker =  new Worker( `${__dirname}/worker-site_Cons.js`, {workerData: {id:this.id, hostname:this.hostname, HTTPport:this.HTTPport, HTTPchildPort:this.HTTPchildPort, Table:this.Table,startPort:this.startPort}} );
     
     return new Promise((resolve,reject)=>{
       this.worker.on('online', 
@@ -32,7 +32,7 @@ class myWorker{
 class ArrayofWorkersCons extends Array{
   constructor({numberOfWorkers,hostname, startPort}){
     super()
-    this.ArrayofWorkersCons = ArrayofWorkersCons
+    this.numberOfWorkers = numberOfWorkers
     this.hostname = hostname;
     this.startPort = startPort;
 
