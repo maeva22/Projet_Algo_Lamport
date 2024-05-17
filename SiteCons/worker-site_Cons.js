@@ -16,27 +16,26 @@ const hostname = workerData.hostname;
 const startPort = workerData.startPort;
 
 // Data du worker
-const debcons = 0;
-const fincons = 0;
-const ifinprod = 0;
+var debcons = 0;
+var fincons = 0;
+var ifinprod = 0;
 
-const req_en_cours = false;
-const sc_en_cours = false;
+var req_en_cours = false;
+var sc_en_cours = false;
 
-const table = workerData.Table;
+var table = workerData.Table;
 
 
 app.post('/token', (req, res) => {
- 
-
 
   const value = req.body.request_obj;
 
   if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement 
+    
     console.log(`Verif :  ${res} `)
   
     // ACQUISITION
-    if( !req_en_cours && value.getType()=="BSC" ){
+    if( !req_en_cours && value.type=="BSC" ){
       req_en_cours = true;
     }
   
@@ -50,7 +49,7 @@ app.post('/token', (req, res) => {
   
     // LIBERATION
   
-    if( req_en_cours && sc_en_cours && value.getType()=="FINSC" ){ 
+    if( req_en_cours && sc_en_cours && value.type=="FINSC" ){ 
       fincons += 1;
       K = 1;
       while ( k < n+1){
@@ -66,8 +65,8 @@ app.post('/token', (req, res) => {
       // SetTimeout(()=>{request_aleatoire()}, Math.floor(Math.random()*10000))
     }
     // RECEPTION DE IFINPROD
-    if ( value.getType()=="MAJ" && value.getInfo() == "ifinprod"){
-      this.ifinprod = value.getHorloge();
+    if ( value.type=="MAJ" && value.info == "ifinprod"){
+      ifinprod = value.horloge;
     }
   
     if ( /* recois requête type  REQ */ false){
@@ -98,9 +97,9 @@ async function send_maj(newval, info){ // a vérifier
   const token = new request_obj("MAJ",-1, newval, info)
 
   for( let i =0; i < table.length; i++ ){
-     if( i != this.indice){
+     if( i != indice){
       fetch(
-        `http://${this.hostname}:${this.startPort+i}/token`,
+        `http://${hostname}:${startPort+i}/token`,
         {
             method: 'post',
             body: JSON.stringify(token),
@@ -111,7 +110,7 @@ async function send_maj(newval, info){ // a vérifier
         return data.json()
       })
       .then((respons)=>{
-        console.log(`Consomateur a just send to ${this.startPort+i} new value : ${info} at ${newval} `);
+        console.log(`Consomateur a just send to ${startPort+i} new value : ${info} at ${newval} `);
       })
      }
   }
@@ -119,8 +118,10 @@ async function send_maj(newval, info){ // a vérifier
 
 
 function request_aleatoire(){
-  if(!req_en_cours){
 
+  if(!req_en_cours){
+    console.log(`Consomateur ${indice} : request_aleatoire `)
+    req_en_cours = true
     // send REQ !!! 
 
   }
@@ -143,71 +144,10 @@ function Msg_Rel(){
 
 function start(){
   setTimeout(()=>{start()},500)
+  setTimeout(()=>{request_aleatoire()},500) 
+
   
 }
 
-/*
-async function start(){
-        await cruise();
-        await start()
-}
-async function tokenReceived(token){
-  switch(status){
-    case 'demandeur':
-      console.log(`${id} :token received while 'demandeur' : begins crossing`);
-      status = 'dedans';
-      await cross(token);
-      await sendToken(token)
-      status = 'dehors';
-      break;
-    case 'dedans':
-      console.log(`token received while "dedans" : cant be`);
-      break;
-    case 'dehors':
-      console.log(`${id} :token received while 'dehors' : just pass it`);
-      await sendToken(token);
-      break;
-    default:
-      console.log('unknown state');
-  }
-
-}
-async function cross(){
-    const deb = new Date();
-    return new Promise((resolve, reject)=>{
-      setTimeout(()=>{
-          resolve();
-          const end = new Date();
-          console.log(`${workerData.id} has crossed between ${deb.getHours()}:${deb.getMinutes()}:${deb.getSeconds()}:${deb.getMilliseconds()} and ${end.getHours()}:${end.getMinutes()}:${end.getSeconds()}:${end.getMilliseconds()}`)
-        }, 
-        Math.floor(Math.random()*10000)
-      )
-    })
-}  
-async function cruise(){
-    return new Promise((resolve, reject)=>{
-      setTimeout(()=>{
-          resolve();
-          console.log(`\t \t ${workerData.id} has arrived to the crossing`)
-          status = 'demandeur';
-        }, 
-        Math.floor(Math.random()*5000)
-      )
-    })
-  
-}  
-async function sendToken(token){
-    const response = await fetch(
-        `http://${hostname}:${HTTPchildPort}/token`,
-        {
-            method: 'post',
-            body: JSON.stringify(token),
-            headers: {'Content-Type': 'application/json'}
-        }
-    );
-    const data = await response.json();
-    console.log(`${id} (${HTTPport}) has just send a token to ${HTTPchildPort} `)
-}
-*/
 
 start();

@@ -1,4 +1,4 @@
-class request{
+class request_obj{
 
     constructor(type, indice, horloge, info = null){
         // REQ / ACK / REL / BSC / FINSC / MAJ
@@ -19,3 +19,5 @@ class request{
     getInfo(){ return this.info}
 
 }
+
+module.exports.request_obj = request_obj;

@@ -1,6 +1,6 @@
 const { Worker, workerData } = require('worker_threads');
 const os = require('os');
-const { table } = require('console');
+const { table, Console } = require('console');
 const hostname  = "localhost";//os.hostname();
 
 
@@ -73,10 +73,11 @@ class ArrayofWorkersCons extends Array{
     this.forEach((site)=>{sitesPromises.push(site.init())})
     Promise.all(sitesPromises).then(()=>{
       setTimeout(()=>{this.launch()},1000)})
-    setTimeout(()=>{this.harakiri()}, 100000);
+    //setTimeout(()=>{this.harakiri()}, 100000);
   }
 
   harakiri(){
+    Console.log("+++++++++++++++++++ HARAKIRI +++++++++++++++++++")
     this.forEach((site)=>{site.worker.terminate()});
   }
   async launch(){
