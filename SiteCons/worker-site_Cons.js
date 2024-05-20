@@ -119,7 +119,7 @@ async function send_maj(newval, info) { // a vérifier
 function request_aleatoire() {
 
   if (!req_en_cours) {
-    console.log(`Consomateur ${indice} : request_aleatoire `)
+    //console.log(`Consomateur ${indice} : request_aleatoire `)
     req_en_cours = true
     // send REQ !!! 
 

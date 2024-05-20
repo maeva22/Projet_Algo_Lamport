@@ -109,7 +109,7 @@ class ArrayofWorkersCons extends Array {
   }
 }
 
-const ArrayofWorkers = new ArrayofWorkersCons({ numberOfWorkers: 5, hostname, startPort: 3000 });
+const ArrayofWorkers = new ArrayofWorkersCons({ numberOfWorkers: 4, hostname, startPort: 3000 });
 ArrayofWorkers.init().then(() => { console.log(`Array of Workers a été lancer`) })
 
 

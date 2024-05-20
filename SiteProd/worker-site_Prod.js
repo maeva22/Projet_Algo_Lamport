@@ -37,74 +37,89 @@ app.post('/token', (req, res) => {
   if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement  
 
     // RECEPTION D'UN REQ
-    if (value.type == "REQ") {
-      //console.log(`Worker Prod ${indice} : received REQ from ${value.indice}`)
+    if (value.type == "REQ" ) {
+      
+      console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
       hl = maj_h(hl, value.horloge)
-      // hl += 1 On le fait dans maj ! 
+      hl =hl +1;
       envoie_ack(value.indice)
-      // Envoie ACK ! TO DO 
       table[value.indice] = ["REQ", value.horloge];
+      console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
+
     }
 
     // RECEPTION D'UN ACK
     if (value.type == "ACK") {
       hl = maj_h(hl, value.horloge)
-      console.log(`Worker Production ${indice} : Akncoledgue : ${value.indice}`)
+      hl = hl+1;
+      console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
 
       if (table[value.indice][0] != "ACK") {
         table[value.indice] = ["ACK", value.horloge]
+        console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
+
       }
     }
 
     // RECEPTION D'UN REL
     if (value.type == "REL") {
+      console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
+
       hl = maj_h(hl, value.horloge)
+      hl = hl+1;
       table[value.indice] = ["REL", value.horloge];
+      console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
+
       debprod = debprod + 1;
       finprod = finprod + 1;
+
+      
     }
 
     // ACQUISITION doubt
-    if (!req_en_cours && value.type == "BSC") {
+    if (!req_en_cours && value.type == "BSC" && value.indice == indice) {
+      console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
+
       hl = hl + 1;
       req_en_cours = true;
       diffuser("REQ", hl, indice);
-      table[i] = ["REQ", hl]
+      table[indice] = ["REQ", hl]
+      console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
+
     }
-
-
-    tps1 = req_en_cours
-    tps2 = !sc_en_cours
-    tps3 = plus_vieille_date(table)
-    tps4 = plus_vieille_date(table) == indice
-    tps5 = debprod - ifincons < SpaceCritique
-    tps6 = req_en_cours && !sc_en_cours && plus_vieille_date(table) == indice && debprod - ifincons < SpaceCritique
 
     // SECTION CRITIQUE
     if (req_en_cours && !sc_en_cours && plus_vieille_date(table) == indice && debprod - ifincons < SpaceCritique) {
+      console.log(`[Worker Prod ${indice}] : Launching Section Critique  /  Table : ${table} `)
+      req_en_cours = true;
       debprod = debprod + 1;
-      sc_en_cours = true;
-
       call_sc();
-
+      sc_en_cours = true;
     }
 
     // Liberation
     if (req_en_cours && sc_en_cours && value.type == "FINSC" && value.indice == indice) {
-      console.log(`Liberation of :  ${indice}`)
+      console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
       finprod = finprod + 1;
       // C !! maje(finprod),
       sc_en_cours = false;
       hl = hl + 1
       diffuser("REL", hl, indice);
-      table[value.indice] = ["REL", hl];
+      table[indice] = ["REL", hl];
+      console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
       req_en_cours = false
+      diffuser("BSC", hl, indice);
+
+
+      //diffuser("BSC", hl, indice);
       
     }
 
     // Mise a jour
     if (value.type == "MAJ") {
       hl = maj_h(hl, value.horloge)
+      //console.log(`Table: ${indice} \n ${table} \n`)
+
     }
 
   }
@@ -142,10 +157,9 @@ function envoie_ack(sendindice) {
 // requête sur notre site pour lancer lc 
 async function call_sc(){
   // simulation par affichage de msg 
-  setTimeout(() => { 
-    console.log(`Execution de la section critique : ${indice}`)
-    diffuser("FINSC" , hl , indice)
-  }, 1500)
+  console.log(`[Worker Prod ${indice}] : Execution de la section critique \n`)
+  diffuser("FINSC" , hl , indice)
+
 
 }
 
@@ -155,6 +169,7 @@ function diffuser(msg, hl, indice) { // A vérifier on envoie nottament a prod a
   const token = new obj.request_obj(msg, indice, hl, "")
 
   for (let i = 0; i < table.length; i++) {
+    if( i != indice || msg == "FINSC"|| msg == "BSC"){
       fetch(
         `http://${hostname}:${startPort + i}/token`,
         {
@@ -169,6 +184,8 @@ function diffuser(msg, hl, indice) { // A vérifier on envoie nottament a prod a
         .then((respons) => {
           console.log(`Producteur a just send to ${startPort + i} new value : ${msg} at ${hl} `);
         })
+    }
+     
   }
 
 
@@ -177,8 +194,8 @@ function diffuser(msg, hl, indice) { // A vérifier on envoie nottament a prod a
 /* procédure permettant de mettre à jour l’horloge locale hl d’une date he reçue via une estampille */
 function maj_h(hl, he) {
   //console.log(`Update of horloge ${indice} hl : ${hl} / he : ${he} `);
-  if (he > hl) hl = he + 1;
-  else hl = hl + 1;
+  if (he > hl) hl = he;
+  else hl = hl;
 
   return hl;
 }
@@ -206,7 +223,6 @@ function request_aleatoire() {
 
   if (!req_en_cours) {
     console.log(`Prod  ${indice} : send request_aleatoire  `)
-    // send REQ !!! 
     hl = hl + 1
     req_en_cours = true
     diffuser("REQ", hl, indice)
@@ -216,9 +232,10 @@ function request_aleatoire() {
 
 function start() {
   setTimeout(() => { start() }, 500)
-  setTimeout(() => { request_aleatoire() }, 500)
+ 
 }
 
 
 
 start();
+setTimeout(() => { request_aleatoire() }, 500+randomInt(100))
