@@ -32,6 +32,9 @@ var sc_en_cours = false;
 
 
 app.post('/token', (req, res) => {
+})
+
+app.post('/REQ', (req, res) => {
 
   const value = req.body;
   if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement  
@@ -47,7 +50,13 @@ app.post('/token', (req, res) => {
       console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
 
     }
+  }
+})
 
+
+app.post('/ACK', (req, res) => {
+  const value = req.body;
+  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement  
     // RECEPTION D'UN ACK
     if (value.type == "ACK") {
       hl = maj_h(hl, value.horloge)
@@ -60,7 +69,27 @@ app.post('/token', (req, res) => {
 
       }
     }
+  }
+})
 
+app.post('/SC', (req, res) => {
+  const value = req.body;
+  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement  
+    // SECTION CRITIQUE
+    if (req_en_cours && !sc_en_cours && plus_vieille_date(table) == indice && debprod - ifincons < SpaceCritique) {
+      console.log(`[Worker Prod ${indice}] : Launching Section Critique  /  Table : ${table} `)
+      req_en_cours = true;
+      debprod = debprod + 1;
+      call_sc();
+      sc_en_cours = true;
+    }
+  }
+})
+
+
+app.post('/REL', (req, res) => {
+  const value = req.body;
+  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement  
     // RECEPTION D'UN REL
     if (value.type == "REL") {
       console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
@@ -72,31 +101,14 @@ app.post('/token', (req, res) => {
 
       debprod = debprod + 1;
       finprod = finprod + 1;
-
       
     }
+  }
+})
 
-    // ACQUISITION doubt
-    if (!req_en_cours && value.type == "BSC" && value.indice == indice) {
-      console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
-
-      hl = hl + 1;
-      req_en_cours = true;
-      diffuser("REQ", hl, indice);
-      table[indice] = ["REQ", hl]
-      console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
-
-    }
-
-    // SECTION CRITIQUE
-    if (req_en_cours && !sc_en_cours && plus_vieille_date(table) == indice && debprod - ifincons < SpaceCritique) {
-      console.log(`[Worker Prod ${indice}] : Launching Section Critique  /  Table : ${table} `)
-      req_en_cours = true;
-      debprod = debprod + 1;
-      call_sc();
-      sc_en_cours = true;
-    }
-
+app.post('/LIB', (req, res) => {
+  const value = req.body;
+  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement  
     // Liberation
     if (req_en_cours && sc_en_cours && value.type == "FINSC" && value.indice == indice) {
       console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
@@ -108,22 +120,24 @@ app.post('/token', (req, res) => {
       table[indice] = ["REL", hl];
       console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
       req_en_cours = false
-      diffuser("BSC", hl, indice);
-
-
-      //diffuser("BSC", hl, indice);
-      
+      diffuser("BSC", hl, indice);      
     }
+  }
+})
 
+app.post('/MAJ', (req, res) => {
+  const value = req.body;
+  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement  
     // Mise a jour
     if (value.type == "MAJ") {
       hl = maj_h(hl, value.horloge)
       //console.log(`Table: ${indice} \n ${table} \n`)
-
     }
-
   }
 })
+
+
+
 
 app.get('/', (req, res) => {
 })
@@ -133,6 +147,7 @@ app.get('/', (req, res) => {
 app.listen(HTTPport, () => {
   console.log(`Worker Site Production number ${indice} is running on http://${hostname}:${HTTPport}`)
 })
+
 
 
 function envoie_ack(sendindice) {
@@ -171,7 +186,7 @@ function diffuser(msg, hl, indice) { // A vérifier on envoie nottament a prod a
   for (let i = 0; i < table.length; i++) {
     if( i != indice || msg == "FINSC"|| msg == "BSC"){
       fetch(
-        `http://${hostname}:${startPort + i}/token`,
+        `http://${hostname}:${startPort + i}/${msg}`,
         {
           method: 'post',
           body: JSON.stringify(token),
