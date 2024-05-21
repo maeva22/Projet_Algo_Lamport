@@ -1,13 +1,17 @@
-
+//Code du controller de Consomation
 var obj = require("../request-obj.js");
+var code = require("./Prod_Code.js");
+
+
 const { parentPort, workerData } = require('worker_threads')
 
 const express = require('express');
-const { Console } = require('console');
-const { randomInt } = require("crypto");
 const app = express()
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const { randomInt } = require("crypto");
 
 // Connexion Data
 const indice = workerData.id; // Indice du producteur
@@ -16,135 +20,90 @@ const HTTPchildPort = workerData.HTTPchildPort;
 const hostname = workerData.hostname;
 const startPort = workerData.startPort;
 
+// Lien vers les autres
 const numberofprocessus = workerData.numberofprocessus
 const SpaceCritique = workerData.SpaceCritique
 
-var hl = 0; // Heure locale
+var subWorker = new code.ProdProg(hostname, startPort + indice)
 
+// Data du worker
+var hl = 0; // Heure locale
 var debprod = 0;
 var finprod = 0;
 var ifincons = 0;
-
 var table = workerData.Table;
 
+// Data pour modéliser l'état du actuel du controller
 var req_en_cours = false;
 var sc_en_cours = false;
 
 
-app.post('/token', (req, res) => {
-})
+app.post('/token', (req, res) => { })
 
+
+// RECEPTION D'UN REQ
 app.post('/REQ', (req, res) => {
-
   const value = req.body;
- 
-    // RECEPTION D'UN REQ
-    if (value.type == "REQ" ) {
-      
-      //console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
-      hl = maj_h(hl, value.horloge)
-      hl =hl +1;
-      envoie_ack(value.indice)
-      table[value.indice] = ["REQ", value.horloge];
-      //console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
-
-    
+  if (value.type == "REQ") {
+    hl = maj_h(hl, value.horloge)
+    hl = hl + 1;
+    envoie_ack(value.indice)
+    table[value.indice] = ["REQ", value.horloge];
   }
 })
 
-
+// RECEPTION D'UN ACK
 app.post('/ACK', (req, res) => {
   const value = req.body;
-    // RECEPTION D'UN ACK
-    if (value.type == "ACK") {
-      hl = maj_h(hl, value.horloge)
-      hl = hl+1;
-      //console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
-
-      if (table[value.indice][0] != "ACK") {
-        table[value.indice] = ["ACK", value.horloge]
-        //console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
-
-      
+  if (value.type == "ACK") {
+    hl = maj_h(hl, value.horloge)
+    hl = hl + 1;
+    if (table[value.indice][0] != "ACK") {
+      table[value.indice] = ["ACK", value.horloge]
     }
   }
 })
 
-app.post('/SC', (req, res) => {
-  const value = req.body;
- 
-})
-
-
+// RECEPTION D'UN REL
 app.post('/REL', (req, res) => {
   const value = req.body;
-     // RECEPTION D'UN REL
-    if (value.type == "REL") {
-      //console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
-
-      hl = maj_h(hl, value.horloge)
-      hl = hl+1;
-      table[value.indice] = ["REL", value.horloge];
-      //console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
-
-      debprod = debprod + 1;
-      finprod = finprod + 1;
-
-
-      
-    }
-  
+  hl = maj_h(hl, value.horloge)
+  hl = hl + 1;
+  table[value.indice] = ["REL", value.horloge];
+  debprod = debprod + 1;
+  finprod = finprod + 1;
 })
 
+// Liberation
 app.post('/FINSC', (req, res) => {
   const value = req.body;
- 
-    // Liberation
-    if (req_en_cours && sc_en_cours && value.indice == indice) {
-      console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
-      finprod = finprod + 1;
-      // C !! maje(finprod),
-      maj_ifinprod(finprod)
-      sc_en_cours = false;
-      hl = hl + 1
-      diffuser("REL", hl, indice);
-      table[indice] = ["REL", hl];
-      //console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
-      req_en_cours = false
-      //diffuser("REL", hl, indice);      
-    }
+
+
+  if (req_en_cours && sc_en_cours) {
+    console.log(`[Worker Prod ${indice}] Production`)
+    finprod = finprod + 1;
+    maj_ifinprod(finprod)
+    sc_en_cours = false;
+    hl = hl + 1
+    diffuser("REL", hl, indice);
+    table[indice] = ["REL", hl];
+    req_en_cours = false
+  }
 })
 
+// Mise a jour
 app.post('/MAJ', (req, res) => {
   const value = req.body;
-    // Mise a jour
-    if (value.type == "MAJ") {
-      ifincons = value.horloge
-      //console.log(`Table: ${indice} \n ${table} \n`)
-    }
-  
+  if (value.type == "MAJ") {
+    ifincons = value.horloge
+  }
 })
 
 
-
-
-
-
-
-app.get('/', (req, res) => {
-})
-
-
-
-app.listen(HTTPport, () => {
-  console.log(`Worker Site Production number ${indice} is running on http://${hostname}:${HTTPport}`)
-})
-
-
+app.listen(HTTPport, () => { console.log(`Worker Site Production number ${indice} is running on http://${hostname}:${HTTPport}`) })
 
 function envoie_ack(sendindice) {
   const token = new obj.request_obj("ACK", indice, hl, "")
-
   fetch(
     `http://${hostname}:${startPort + sendindice}/token`,
     {
@@ -153,27 +112,12 @@ function envoie_ack(sendindice) {
       headers: { 'Content-Type': 'application/json' }
     }
   )
-    .then((data) => {
-      return data.json()
-    })
-    .then((respons) => {
-      console.log(`Prod aknowledge ${startPort + sendindice}`);
-    })
+    .then((data) => { return data.json(); })
+    .then((respons) => { console.log(`Prod aknowledge ${startPort + sendindice}`); })
 }
 
-// requête sur notre site pour lancer lc 
-async function call_sc(){
-  // simulation par affichage de msg 
-  console.log(`[Worker Prod ${indice}] : Execution de la section critique \n`)
-  diffuser("FINSC" , hl , indice)
-
-
-
-}
-
-function maj_ifinprod(){
+function maj_ifinprod() {
   const token = new obj.request_obj("MAJ", indice, finprod, "")
-
   fetch(
     `http://${hostname}:${startPort + table.length}/MAJ`,
     {
@@ -182,12 +126,8 @@ function maj_ifinprod(){
       headers: { 'Content-Type': 'application/json' }
     }
   )
-    .then((data) => {
-      return data.json()
-    })
-    .then((respons) => {
-      console.log(`Producteur a just send to ${startPort + i} new value : ${msg} at ${hl} `);
-    })
+    .then((data) => { return data.json() })
+    .then((respons) => { console.log(`Producteur a just send to ${startPort + i} new value : ${msg} at ${hl} `); })
 }
 
 /* procédure permettant de diffuser à l’ensemble des autres contrôleurs un message msg (hl, i). Ce message est de type req ou rel. */
@@ -195,9 +135,8 @@ function diffuser(msg, hl, indice) { // A vérifier on envoie nottament a prod a
   table[indice] = [msg, hl];
   const token = new obj.request_obj(msg, indice, hl, "")
 
-
   for (let i = 0; i < table.length; i++) {
-    if( i != indice || msg == "FINSC"|| msg == "BSC"){
+    if (i != indice) {
       fetch(
         `http://${hostname}:${startPort + i}/${msg}`,
         {
@@ -206,30 +145,20 @@ function diffuser(msg, hl, indice) { // A vérifier on envoie nottament a prod a
           headers: { 'Content-Type': 'application/json' }
         }
       )
-        .then((data) => {
-          return data.json()
-        })
-        .then((respons) => {
-          console.log(`Producteur a just send to ${startPort + i} new value : ${msg} at ${hl} `);
-        })
+        .then((data) => { return data.json() })
+        .then((respons) => { console.log(`Producteur a just send to ${startPort + i} new value : ${msg} at ${hl} `); })
     }
-     
   }
-
-
 }
 
 /* procédure permettant de mettre à jour l’horloge locale hl d’une date he reçue via une estampille */
 function maj_h(hl, he) {
-  //console.log(`Update of horloge ${indice} hl : ${hl} / he : ${he} `);
-  if (he > hl) hl = he;
-  else hl = hl;
-
-  return hl;
+  if (he > hl) return he;
+  else return hl;
 }
 
 /* renvoie l’identifiant du processus ayant la plus vielle date dans le tableau tab */
-function plus_vieille_date(tab) { // A vérifier
+function plus_vieille_date(tab) { 
   let val = tab[0][1]
   let minElement = tab[0]
 
@@ -240,41 +169,33 @@ function plus_vieille_date(tab) { // A vérifier
         minElement = element
       }
     }
-
   })
-  tps = table.indexOf(minElement)
+
   return table.indexOf(minElement)
 }
 
 
 function request_aleatoire() {
-
   if (!req_en_cours) {
-    console.log(`Prod  ${indice} : send request_aleatoire  `)
     hl = hl + 1
     req_en_cours = true
     diffuser("REQ", hl, indice)
-
   }
 }
 
 function start() {
 
-  setTimeout(() => {request_aleatoire() },500)
+  setTimeout(() => { request_aleatoire() }, 500)
   setTimeout(() => { start() }, 500)
 
-      // SECTION CRITIQUE
-      if (req_en_cours && !sc_en_cours && plus_vieille_date(table) == indice && debprod - ifincons < SpaceCritique) {
-        console.log(`[Worker Prod ${indice}] : Launching Section Critique  /  Table : ${table} `)
-        req_en_cours = true;
-        sc_en_cours = true;
-    
-        debprod = debprod + 1;
-        call_sc();
-      }
- 
+  // SECTION CRITIQUE
+  if (req_en_cours && !sc_en_cours && plus_vieille_date(table) == indice && debprod - ifincons < SpaceCritique) {
+    req_en_cours = true;
+    sc_en_cours = true;
+
+    debprod = debprod + 1;
+    subWorker.sectionCritique()
+  }
 }
-
-
 
 start();

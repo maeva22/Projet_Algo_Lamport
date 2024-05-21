@@ -3,7 +3,7 @@ const os = require('os');
 const { table, Console } = require('console');
 const hostname = "localhost";//os.hostname();
 
-const SpaceCritique = 2
+const SpaceCritique = 4
 
 class myWorker {
   constructor({ id, hostname, HTTPport, HTTPchildPort, Table, startPort,numberOfWorkers }) {
@@ -109,7 +109,7 @@ class ArrayofWorkersCons extends Array {
   }
 }
 
-const ArrayofWorkers = new ArrayofWorkersCons({ numberOfWorkers: 4, hostname, startPort: 3000 });
+const ArrayofWorkers = new ArrayofWorkersCons({ numberOfWorkers: 10, hostname, startPort: 3000 });
 ArrayofWorkers.init().then(() => { console.log(`Array of Workers a été lancer`) })
 
 

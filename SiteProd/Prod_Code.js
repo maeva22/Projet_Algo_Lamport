@@ -1,8 +1,9 @@
 // Code du worker
 var obj = require("../request-obj.js");
+
 const { randomInt } = require("crypto");
 
-class ConsProg {
+class ProdProg {
 
     constructor(hostname,sitePort) {
         this.hostname = hostname;
@@ -10,8 +11,8 @@ class ConsProg {
      }
 
     async sectionCritique(){
-  
-        setTimeout(() => { this.end() }, randomInt(1))
+
+        setTimeout(() => { this.end() }, 500)//randomInt(500)*2)
       
     }
 
@@ -35,4 +36,4 @@ class ConsProg {
     }    
 
 
-module.exports.ConsProg = ConsProg;
+module.exports.ProdProg = ProdProg;

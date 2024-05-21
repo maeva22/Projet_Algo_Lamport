@@ -9,7 +9,7 @@ class request_obj {
         // MAJ = mise a jour
 
         this.type = type;
-        this.indice = indice; // -1 si l'éméteur n'est pas retenue
+        this.indice = indice; 
         this.horloge = horloge;
         this.info = info; // Précision si on maj fincons, ifinprod ...
     }
