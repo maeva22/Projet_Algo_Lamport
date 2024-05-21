@@ -30,20 +30,9 @@ var sc_en_cours = false;
 
 app.post('/ACQ', (req, res) => {
   const value = req.body;
-    console.log(`Verif :  ${res} `)
     // ACQUISITION
     if (!req_en_cours && value.type == "BSC") {
       req_en_cours = true;
-    }
-})
-
-app.post('/SC', (req, res) => {
-  const value = req.body;
-    // SECTION CRITIQUE
-    if (req_en_cours && !sc_en_cours && debcons - ifinprod < 0) {
-      debcons += 1;
-      Msg_dbt_sc();
-      sc_en_cours = true;
     }
 })
 
@@ -120,6 +109,8 @@ function request_aleatoire() {
 }
 
 function sendFINC() { // A vérifier on envoie nottament a prod a voir si c'est gérer
+  console.log(`[Worker Cons ${indice}] : Fin Section Critique `)
+
   const token = new obj.request_obj("FINSC", "", "", "")
     fetch(
         `http://${hostname}:${startPort + indice}/FINSC`,
@@ -141,7 +132,7 @@ function sendFINC() { // A vérifier on envoie nottament a prod a voir si c'est 
 
 function Msg_dbt_sc() {
   // TO DO ! 
-  console.log(`[Worker Cons ${indice}] : Launching Section Critique `)
+  console.log(`[Worker Cons ${indice}] : Section Critique `)
 
   // Controle ( worker ) envoie au consomateur ( intérieur du site )
 
@@ -159,7 +150,7 @@ function start() {
   setTimeout(() => { request_aleatoire() }, 500)
 
     // SECTION CRITIQUE
-    if (req_en_cours && !sc_en_cours && debcons - ifinprod < SpaceCritique) {
+    if (req_en_cours && !sc_en_cours && debcons - ifinprod < 0) {
       console.log(`[Worker Cons ${indice}] : Launching Section Critique `)
       debcons = debcons + 1 
       Msg_dbt_sc()

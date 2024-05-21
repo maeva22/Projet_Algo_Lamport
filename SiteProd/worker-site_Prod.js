@@ -41,12 +41,12 @@ app.post('/REQ', (req, res) => {
     // RECEPTION D'UN REQ
     if (value.type == "REQ" ) {
       
-      console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
+      //console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
       hl = maj_h(hl, value.horloge)
       hl =hl +1;
       envoie_ack(value.indice)
       table[value.indice] = ["REQ", value.horloge];
-      console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
+      //console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
 
     
   }
@@ -59,11 +59,11 @@ app.post('/ACK', (req, res) => {
     if (value.type == "ACK") {
       hl = maj_h(hl, value.horloge)
       hl = hl+1;
-      console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
+      //console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
 
       if (table[value.indice][0] != "ACK") {
         table[value.indice] = ["ACK", value.horloge]
-        console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
+        //console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
 
       
     }
@@ -80,12 +80,12 @@ app.post('/REL', (req, res) => {
   const value = req.body;
      // RECEPTION D'UN REL
     if (value.type == "REL") {
-      console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
+      //console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
 
       hl = maj_h(hl, value.horloge)
       hl = hl+1;
       table[value.indice] = ["REL", value.horloge];
-      console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
+      //console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
 
       debprod = debprod + 1;
       finprod = finprod + 1;
@@ -109,7 +109,7 @@ app.post('/FINSC', (req, res) => {
       hl = hl + 1
       diffuser("REL", hl, indice);
       table[indice] = ["REL", hl];
-      console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
+      //console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
       req_en_cours = false
       //diffuser("REL", hl, indice);      
     }
