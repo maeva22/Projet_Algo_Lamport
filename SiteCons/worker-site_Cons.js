@@ -26,7 +26,7 @@ var sc_en_cours = false;
 
 
 app.post('/ACQ', (req, res) => {
-  const value = req.body.request_obj;
+  const value = req.body;
     console.log(`Verif :  ${res} `)
     // ACQUISITION
     if (!req_en_cours && value.type == "BSC") {
@@ -47,7 +47,7 @@ app.post('/SC', (req, res) => {
 app.post('/FINSC', (req, res) => {
   const value = req.body.request_obj;
     // LIBERATION
-    if (req_en_cours && sc_en_cours && value.type == "FINSC") {
+    if (req_en_cours && sc_en_cours ) {
       fincons += 1;
       K = 1;
       while (k < numberofprocessus + 1) {
@@ -65,7 +65,7 @@ app.post('/FINSC', (req, res) => {
 })
 
 app.post('/MAJ', (req, res) => {
-  const value = req.body.request_obj;
+  const value = req.body;
     // RECEPTION DE IFINPROD
     if (value.type == "MAJ" && value.info == "ifinprod") {
       ifinprod = value.horloge;
@@ -98,7 +98,7 @@ async function send_maj(newval, info) { // a vérifier
   for (let i = 0; i < table.length; i++) {
     if (i != indice) {
       fetch(
-        `http://${hostname}:${startPort + i}/token`,
+        `http://${hostname}:${startPort + i}/MAJ`,
         {
           method: 'post',
           body: JSON.stringify(token),

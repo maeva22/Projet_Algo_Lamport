@@ -37,8 +37,7 @@ app.post('/token', (req, res) => {
 app.post('/REQ', (req, res) => {
 
   const value = req.body;
-  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement  
-
+ 
     // RECEPTION D'UN REQ
     if (value.type == "REQ" ) {
       
@@ -49,14 +48,13 @@ app.post('/REQ', (req, res) => {
       table[value.indice] = ["REQ", value.horloge];
       console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
 
-    }
+    
   }
 })
 
 
 app.post('/ACK', (req, res) => {
   const value = req.body;
-  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement  
     // RECEPTION D'UN ACK
     if (value.type == "ACK") {
       hl = maj_h(hl, value.horloge)
@@ -67,16 +65,14 @@ app.post('/ACK', (req, res) => {
         table[value.indice] = ["ACK", value.horloge]
         console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
 
-      }
+      
     }
   }
 })
 
 app.post('/SC', (req, res) => {
   const value = req.body;
-  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement  
-   
-  }
+ 
 })
 
 
@@ -93,6 +89,9 @@ app.post('/REL', (req, res) => {
 
       debprod = debprod + 1;
       finprod = finprod + 1;
+      maj_ifinprod()
+
+
       
     }
   
@@ -118,13 +117,12 @@ app.post('/FINSC', (req, res) => {
 
 app.post('/MAJ', (req, res) => {
   const value = req.body;
-  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement  
     // Mise a jour
     if (value.type == "MAJ") {
       hl = maj_h(hl, value.horloge)
       //console.log(`Table: ${indice} \n ${table} \n`)
     }
-  }
+  
 })
 
 
@@ -170,12 +168,33 @@ async function call_sc(){
   diffuser("FINSC" , hl , indice)
 
 
+
+}
+
+function maj_ifinprod(){
+  const token = new obj.request_obj("MAJ", indice, finprod, "")
+
+  fetch(
+    `http://${hostname}:${startPort + table.length}/MAJ`,
+    {
+      method: 'post',
+      body: JSON.stringify(token),
+      headers: { 'Content-Type': 'application/json' }
+    }
+  )
+    .then((data) => {
+      return data.json()
+    })
+    .then((respons) => {
+      console.log(`Producteur a just send to ${startPort + i} new value : ${msg} at ${hl} `);
+    })
 }
 
 /* procédure permettant de diffuser à l’ensemble des autres contrôleurs un message msg (hl, i). Ce message est de type req ou rel. */
 function diffuser(msg, hl, indice) { // A vérifier on envoie nottament a prod a voir si c'est gérer
   table[indice] = [msg, hl];
   const token = new obj.request_obj(msg, indice, hl, "")
+
 
   for (let i = 0; i < table.length; i++) {
     if( i != indice || msg == "FINSC"|| msg == "BSC"){
@@ -241,7 +260,7 @@ function request_aleatoire() {
 
 function start() {
 
-  request_aleatoire() 
+  setTimeout(() => {request_aleatoire() },500)
   setTimeout(() => { start() }, 500)
 
       // SECTION CRITIQUE
