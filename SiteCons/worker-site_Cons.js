@@ -25,29 +25,35 @@ var req_en_cours = false;
 var sc_en_cours = false;
 
 
-app.post('/token', (req, res) => {
-
+app.post('/ACQ', (req, res) => {
   const value = req.body.request_obj;
-
   if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement 
-
     console.log(`Verif :  ${res} `)
-
     // ACQUISITION
     if (!req_en_cours && value.type == "BSC") {
       req_en_cours = true;
     }
+  } else { // premier lancement ! 
 
+  }
+})
+
+app.post('/SC', (req, res) => {
+  const value = req.body.request_obj;
+  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement 
     // SECTION CRITIQUE
     if (req_en_cours && !sc_en_cours && debcons - ifinprod < 0) {
       debcons += 1;
       Msg_dbt_sc();
       sc_en_cours = true;
     }
+   } 
+})
 
-
+app.post('/FINSC', (req, res) => {
+  const value = req.body.request_obj;
+  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement 
     // LIBERATION
-
     if (req_en_cours && sc_en_cours && value.type == "FINSC") {
       fincons += 1;
       K = 1;
@@ -63,20 +69,26 @@ app.post('/token', (req, res) => {
       // Launche request in Aleatory time
       // SetTimeout(()=>{request_aleatoire()}, Math.floor(Math.random()*10000))
     }
+   } 
+})
+
+app.post('/MAJ', (req, res) => {
+  const value = req.body.request_obj;
+  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement 
     // RECEPTION DE IFINPROD
     if (value.type == "MAJ" && value.info == "ifinprod") {
       ifinprod = value.horloge;
     }
+   } 
+})
 
+app.post('/ACK', (req, res) => {
+  const value = req.body.request_obj;
+  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement 
     if ( /* recois requête type  REQ */ false) {
       //Envoies ACk
     }
-
-  } else { // premier lancement ! 
-
-  }
-
-
+   } 
 })
 
 
