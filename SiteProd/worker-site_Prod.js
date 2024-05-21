@@ -89,7 +89,6 @@ app.post('/REL', (req, res) => {
 
       debprod = debprod + 1;
       finprod = finprod + 1;
-      maj_ifinprod()
 
 
       
@@ -105,6 +104,7 @@ app.post('/FINSC', (req, res) => {
       console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
       finprod = finprod + 1;
       // C !! maje(finprod),
+      maj_ifinprod(finprod)
       sc_en_cours = false;
       hl = hl + 1
       diffuser("REL", hl, indice);
@@ -119,7 +119,7 @@ app.post('/MAJ', (req, res) => {
   const value = req.body;
     // Mise a jour
     if (value.type == "MAJ") {
-      hl = maj_h(hl, value.horloge)
+      ifincons = value.horloge
       //console.log(`Table: ${indice} \n ${table} \n`)
     }
   

@@ -1,5 +1,5 @@
 //Code du controller de Consomation
-require("../request-obj.js")
+var obj = require("../request-obj.js");
 
 const { parentPort, workerData } = require('worker_threads')
 
@@ -15,6 +15,9 @@ const HTTPchildPort = workerData.HTTPchildPort;
 const hostname = workerData.hostname;
 const startPort = workerData.startPort;
 const numberofprocessus = workerData.numberofprocessus;
+
+const SpaceCritique = workerData.SpaceCritique
+
 
 // Data du worker
 var debcons = 0;
@@ -35,7 +38,7 @@ app.post('/ACQ', (req, res) => {
 })
 
 app.post('/SC', (req, res) => {
-  const value = req.body.request_obj;
+  const value = req.body;
     // SECTION CRITIQUE
     if (req_en_cours && !sc_en_cours && debcons - ifinprod < 0) {
       debcons += 1;
@@ -45,15 +48,15 @@ app.post('/SC', (req, res) => {
 })
 
 app.post('/FINSC', (req, res) => {
-  const value = req.body.request_obj;
+  const value = req.body;
     // LIBERATION
+
+
+/* LIBERATION */
+
     if (req_en_cours && sc_en_cours ) {
-      fincons += 1;
-      K = 1;
-      while (k < numberofprocessus + 1) {
-        send_maj(fincons, "fincons")
-        k += 1;
-      }
+      fincons = fincons +  1;
+      send_maj(fincons, "fincons")
       sc_en_cours = false;
       req_en_cours = false;
 
@@ -67,18 +70,8 @@ app.post('/FINSC', (req, res) => {
 app.post('/MAJ', (req, res) => {
   const value = req.body;
     // RECEPTION DE IFINPROD
-    if (value.type == "MAJ" && value.info == "ifinprod") {
       ifinprod = value.horloge;
-    }
-})
-
-app.post('/ACK', (req, res) => {
-  const value = req.body.request_obj;
-    if ( /* recois requête type  REQ */ false) {
-      //Envoies ACk
-    }
-})
-
+    })
 
 // Function worker Controller
 app.get('/', (req, res) => { })
@@ -93,9 +86,9 @@ app.listen(HTTPport, () => {
 
 async function send_maj(newval, info) { // a vérifier
 
-  const token = new request_obj("MAJ", -1, newval, info)
+  const token = new obj.request_obj("MAJ", -1, newval, info)
 
-  for (let i = 0; i < table.length; i++) {
+  for (let i = 0; i < numberofprocessus; i++) {
     if (i != indice) {
       fetch(
         `http://${hostname}:${startPort + i}/MAJ`,
@@ -126,13 +119,33 @@ function request_aleatoire() {
   }
 }
 
+function sendFINC() { // A vérifier on envoie nottament a prod a voir si c'est gérer
+  const token = new obj.request_obj("FINSC", "", "", "")
+    fetch(
+        `http://${hostname}:${startPort + indice}/FINSC`,
+        {
+          method: 'post',
+          body: JSON.stringify(token),
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+        .then((data) => {
+          return data.json()
+        })
+        .then((respons) => {
+          console.log(`Producteur a just send to ${startPort + i} new value : ${msg} at ${hl} `);
+        })
+    }
+     
+
 
 function Msg_dbt_sc() {
   // TO DO ! 
+  console.log(`[Worker Cons ${indice}] : Launching Section Critique `)
 
   // Controle ( worker ) envoie au consomateur ( intérieur du site )
 
-
+  sendFINC()
   // Prévien qu'on utilise SC ! 
 
 }
@@ -144,6 +157,14 @@ function Msg_Rel() {
 function start() {
   setTimeout(() => { start() }, 500)
   setTimeout(() => { request_aleatoire() }, 500)
+
+    // SECTION CRITIQUE
+    if (req_en_cours && !sc_en_cours && debcons - ifinprod < SpaceCritique) {
+      console.log(`[Worker Cons ${indice}] : Launching Section Critique `)
+      debcons = debcons + 1 
+      Msg_dbt_sc()
+      sc_en_cours = true
+    }
 
 
 }
