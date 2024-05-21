@@ -75,22 +75,14 @@ app.post('/ACK', (req, res) => {
 app.post('/SC', (req, res) => {
   const value = req.body;
   if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement  
-    // SECTION CRITIQUE
-    if (req_en_cours && !sc_en_cours && plus_vieille_date(table) == indice && debprod - ifincons < SpaceCritique) {
-      console.log(`[Worker Prod ${indice}] : Launching Section Critique  /  Table : ${table} `)
-      req_en_cours = true;
-      debprod = debprod + 1;
-      call_sc();
-      sc_en_cours = true;
-    }
+   
   }
 })
 
 
 app.post('/REL', (req, res) => {
   const value = req.body;
-  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement  
-    // RECEPTION D'UN REL
+     // RECEPTION D'UN REL
     if (value.type == "REL") {
       console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
 
@@ -103,14 +95,14 @@ app.post('/REL', (req, res) => {
       finprod = finprod + 1;
       
     }
-  }
+  
 })
 
-app.post('/LIB', (req, res) => {
+app.post('/FINSC', (req, res) => {
   const value = req.body;
-  if (typeof value != "undefined") { // Ici pour ne pas déclencher nos fonction au premier lancement  
+ 
     // Liberation
-    if (req_en_cours && sc_en_cours && value.type == "FINSC" && value.indice == indice) {
+    if (req_en_cours && sc_en_cours && value.indice == indice) {
       console.log(`[Worker Prod ${indice}] : ${value.type} from ${value.indice} /  HE : ${value.horloge}`)
       finprod = finprod + 1;
       // C !! maje(finprod),
@@ -120,9 +112,8 @@ app.post('/LIB', (req, res) => {
       table[indice] = ["REL", hl];
       console.log(`[Worker Prod ${indice}] : New Table : ${table} \n`)
       req_en_cours = false
-      diffuser("BSC", hl, indice);      
+      //diffuser("REL", hl, indice);      
     }
-  }
 })
 
 app.post('/MAJ', (req, res) => {
@@ -135,6 +126,9 @@ app.post('/MAJ', (req, res) => {
     }
   }
 })
+
+
+
 
 
 
@@ -246,11 +240,22 @@ function request_aleatoire() {
 }
 
 function start() {
+
+  request_aleatoire() 
   setTimeout(() => { start() }, 500)
+
+      // SECTION CRITIQUE
+      if (req_en_cours && !sc_en_cours && plus_vieille_date(table) == indice && debprod - ifincons < SpaceCritique) {
+        console.log(`[Worker Prod ${indice}] : Launching Section Critique  /  Table : ${table} `)
+        req_en_cours = true;
+        sc_en_cours = true;
+    
+        debprod = debprod + 1;
+        call_sc();
+      }
  
 }
 
 
 
 start();
-setTimeout(() => { request_aleatoire() }, 500+randomInt(100))
