@@ -29,13 +29,14 @@ class ProdProg {
      * @returns {*}
      */
     async sectionCritique(){
-
         setTimeout(() => { this.end() }, 500)//randomInt(500)*2)
-      
+         /** 
+         * Des améliorations de codes peuvent être appliqués ici 
+        */
     }
 
     /**
-     * Envoie la fin de la section critique au Producteur 
+     * Envoie la fin de la section critique
      */
     end(){
         const token = new obj.request_obj("FINSC", "", "", "")
@@ -51,7 +52,7 @@ class ProdProg {
               return data.json()
             })
             .then((respons) => {
-              console.log(`Producteur a just send to ${startPort + i} new value : ${msg} at ${hl} `);
+              console.log(`Fin de section critique `);
             })
       }
     }    

@@ -30,10 +30,13 @@ class ConsProg {
      */
     async sectionCritique(){
         setTimeout(() => { this.end() }, randomInt(1))
+        /** 
+         * Des améliorations de codes peuvent être appliqués ici 
+        */
     }
 
     /**
-     * Envoie la fin de la section critique au Producteur ??
+     * Envoie la fin de la section critique
      */
     end(){
         const token = new obj.request_obj("FINSC", "", "", "")
@@ -49,7 +52,7 @@ class ConsProg {
               return data.json()
             })
             .then((respons) => {
-              console.log(`Producteur a just send to ${startPort + i} new value : ${msg} at ${hl} `);
+              console.log(`Fin de section critique`);
             })
       }
     }    

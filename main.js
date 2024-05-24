@@ -39,13 +39,12 @@ class myWorker {
   }
 
   /**
-   * Permet de créer les ports pour les producteurs et les consommateurs 
+   * Permet de départager les ports pour les producteurs et les consommateurs 
    *
    * @async
    * @returns {new Promise}
    */
   async init() {
-
     if (this.HTTPport == this.startPort+this.numberofprocessus-1)
       this.dir = `${__dirname}/SiteCons/worker-site_Cons.js`
     else
@@ -62,6 +61,13 @@ class myWorker {
   }
 }
 
+/**
+ * Classe permettant de créer une liste de Worker
+ *
+ * @class ArrayofWorkersCons
+ * @typedef {ArrayofWorkersCons}
+ * @extends {Array}
+ */
 class ArrayofWorkersCons extends Array {
   constructor({ numberOfWorkers, hostname, startPort }) {
     super()
@@ -91,8 +97,6 @@ class ArrayofWorkersCons extends Array {
       this.push(theWorker);
 
     }
-
-    // Création du Consomateur
   }
 
   /**
@@ -150,7 +154,9 @@ class ArrayofWorkersCons extends Array {
 }
 
 /**
- * Lancement avec 10 workers qui commence au port 3000
+ * Création de 10 workers 
+ * 
+ * numberOfWorkers : nombre de worker créer au total
  *
  * @type {ArrayofWorkersCons}
  */

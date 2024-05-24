@@ -16,10 +16,7 @@ class request_obj {
      * @param {*} info
      */
     constructor(type, indice, horloge, info = null) {
-        // REQ / ACK / REL / BSC / FINSC / MAJ
-
-        // BSC = Besoin de secion critique
-        // DSC = Début de secion critique
+        // REQ / ACK / REL / FINSC / MAJ
         // FINSC = fin de section critique
         // MAJ = mise a jour
 
@@ -30,7 +27,7 @@ class request_obj {
     }
 
     /**
-     * Avoir le type de notre requete (REQ / ACK / REL / BSC / FINSC / MAJ)
+     * Avoir le type de notre requete (REQ / ACK / REL / FINSC / MAJ)
      *
      * @returns {*}
      */

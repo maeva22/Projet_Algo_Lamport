@@ -39,7 +39,10 @@ app.post('/ACQ', (req, res) => {
   }
 })
 
-/* LIBERATION */
+ 
+/** 
+ * LIBERATION
+*/
 app.post('/FINSC', (req, res) => {
   const value = req.body;
   if (req_en_cours && sc_en_cours) {
@@ -52,7 +55,9 @@ app.post('/FINSC', (req, res) => {
   }
 })
 
-/* MAJ */
+/** *
+ * MAJ 
+*/
 app.post('/MAJ', (req, res) => { ifinprod = req.body.horloge; })
 
 
@@ -96,17 +101,14 @@ function request_aleatoire() { if (!req_en_cours) { req_en_cours = true } }
 
 
 /**
- * Description placeholder
+ * Message debut section critique 
  */
 function Msg_dbt_sc() {
   // TO DO ! 
   //console.log(`[Worker Cons ${indice}] : Section Critique `)
-
   // Controle ( worker ) envoie au consomateur ( intérieur du site )
-
   sendFINC()
   // Prévien qu'on utilise SC ! 
-
 }
 
 /**
