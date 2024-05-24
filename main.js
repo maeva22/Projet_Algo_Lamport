@@ -2,10 +2,29 @@ const { Worker, workerData } = require('worker_threads');
 const os = require('os');
 const { table, Console } = require('console');
 const hostname = "localhost";//os.hostname();
-
 const SpaceCritique = 4
 
+/**
+ * Classe Worker 
+ *
+ * @class myWorker
+ * @typedef {myWorker}
+ */
 class myWorker {
+
+  /**
+   * Construteur d'un worker
+   *
+   * @constructor
+   * @param {{ id: any; hostname: any; HTTPport: any; HTTPchildPort: any; Table: any; startPort: any; numberOfWorkers: any; }} param0
+   * @param {*} param0.id
+   * @param {*} param0.hostname
+   * @param {*} param0.HTTPport
+   * @param {*} param0.HTTPchildPort
+   * @param {*} param0.Table
+   * @param {*} param0.startPort
+   * @param {*} param0.numberOfWorkers
+   */
   constructor({ id, hostname, HTTPport, HTTPchildPort, Table, startPort,numberOfWorkers }) {
     this.id = id;
     this.hostname = hostname;
@@ -19,6 +38,12 @@ class myWorker {
 
   }
 
+  /**
+   * Permet de créer les ports pour les producteurs et les consommateurs 
+   *
+   * @async
+   * @returns {new Promise}
+   */
   async init() {
 
     if (this.HTTPport == this.startPort+this.numberofprocessus-1)
@@ -70,6 +95,12 @@ class ArrayofWorkersCons extends Array {
     // Création du Consomateur
   }
 
+  /**
+   * Lancement 
+   *
+   * @async
+   * @returns {*}
+   */
   async init() { // A vérifier
     const sitesPromises = new Array();
     this.forEach((site) => { sitesPromises.push(site.init()) })
@@ -79,10 +110,19 @@ class ArrayofWorkersCons extends Array {
     //setTimeout(()=>{this.harakiri()}, 100000);
   }
 
+  /**
+   * Harakiri 
+   */
   harakiri() {
     Console.log("+++++++++++++++++++ HARAKIRI +++++++++++++++++++")
     this.forEach((site) => { site.worker.terminate() });
   }
+  /**
+   * lancement 
+   *
+   * @async
+   * @returns {*}
+   */
   async launch() {
     const token = {
       type: 'token',
@@ -109,6 +149,11 @@ class ArrayofWorkersCons extends Array {
   }
 }
 
+/**
+ * Lancement avec 10 workers qui commence au port 3000
+ *
+ * @type {ArrayofWorkersCons}
+ */
 const ArrayofWorkers = new ArrayofWorkersCons({ numberOfWorkers: 10, hostname, startPort: 3000 });
 ArrayofWorkers.init().then(() => { console.log(`Array of Workers a été lancer`) })
 

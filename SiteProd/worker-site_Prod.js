@@ -1,12 +1,13 @@
 //Code du controller de Consomation
+
 var obj = require("../request-obj.js");
 var code = require("./Prod_Code.js");
 
 
-const { parentPort, workerData } = require('worker_threads')
+const { parentPort, workerData } = require('worker_threads');
 
 const express = require('express');
-const app = express()
+const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -21,10 +22,10 @@ const hostname = workerData.hostname;
 const startPort = workerData.startPort;
 
 // Lien vers les autres
-const numberofprocessus = workerData.numberofprocessus
-const SpaceCritique = workerData.SpaceCritique
+const numberofprocessus = workerData.numberofprocessus;
+const SpaceCritique = workerData.SpaceCritique;
 
-var subWorker = new code.ProdProg(hostname, startPort + indice)
+var subWorker = new code.ProdProg(hostname, startPort + indice);
 
 // Data du worker
 var hl = 0; // Heure locale
@@ -102,6 +103,11 @@ app.post('/MAJ', (req, res) => {
 
 app.listen(HTTPport, () => { console.log(`Worker Site Production number ${indice} is running on http://${hostname}:${HTTPport}`) })
 
+/**
+ * Envoie ACK 
+ *
+ * @param {*} sendindice
+ */
 function envoie_ack(sendindice) {
   const token = new obj.request_obj("ACK", indice, hl, "")
   fetch(
@@ -116,6 +122,9 @@ function envoie_ack(sendindice) {
     .then((respons) => { console.log(`Prod aknowledge ${startPort + sendindice}`); })
 }
 
+/**
+ * enoie mise à jour de ifinprod
+ */
 function maj_ifinprod() {
   const token = new obj.request_obj("MAJ", indice, finprod, "")
   fetch(
@@ -130,7 +139,15 @@ function maj_ifinprod() {
     .then((respons) => { console.log(`Producteur a just send to ${startPort + i} new value : ${msg} at ${hl} `); })
 }
 
-/* procédure permettant de diffuser à l’ensemble des autres contrôleurs un message msg (hl, i). Ce message est de type req ou rel. */
+
+ 
+/**
+ * Procédure permettant de diffuser à l’ensemble des autres contrôleurs un message msg (hl, i). Ce message est de type req ou rel. 
+ *
+ * @param {*} msg
+ * @param {*} hl
+ * @param {*} indice
+ */
 function diffuser(msg, hl, indice) { // A vérifier on envoie nottament a prod a voir si c'est gérer
   table[indice] = [msg, hl];
   const token = new obj.request_obj(msg, indice, hl, "")
@@ -151,13 +168,24 @@ function diffuser(msg, hl, indice) { // A vérifier on envoie nottament a prod a
   }
 }
 
-/* procédure permettant de mettre à jour l’horloge locale hl d’une date he reçue via une estampille */
+/**
+ * procédure permettant de mettre à jour l’horloge locale hl d’une date he reçue via une estampille
+ *
+ * @param {*} hl
+ * @param {*} he
+ * @returns {*}
+ */
 function maj_h(hl, he) {
   if (he > hl) return he;
   else return hl;
 }
 
-/* renvoie l’identifiant du processus ayant la plus vielle date dans le tableau tab */
+/**
+ * renvoie l’identifiant du processus ayant la plus vielle date dans le tableau tab
+ *
+ * @param {*} tab
+ * @returns {*}
+ */
 function plus_vieille_date(tab) { 
   let val = tab[0][1]
   let minElement = tab[0]
@@ -175,6 +203,9 @@ function plus_vieille_date(tab) {
 }
 
 
+/**
+ * requete aléatoire 
+ */
 function request_aleatoire() {
   if (!req_en_cours) {
     hl = hl + 1
@@ -183,6 +214,9 @@ function request_aleatoire() {
   }
 }
 
+/**
+ * function départ 
+ */
 function start() {
 
   setTimeout(() => { request_aleatoire() }, 500)

@@ -1,11 +1,9 @@
 //Code du controller de Consomation
 var obj = require("../request-obj.js");
 var code = require("./Cons_Code.js");
-
-const { parentPort, workerData } = require('worker_threads')
-
-const express = require('express')
-const app = express()
+const { parentPort, workerData } = require('worker_threads');
+const express = require('express');
+const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -21,9 +19,8 @@ const startPort = workerData.startPort;
 
 // Lien vers les autres
 const numberofprocessus = workerData.numberofprocessus;
-const SpaceCritique = workerData.SpaceCritique
-
-var subWorker = new code.ConsProg(hostname, startPort + indice)
+const SpaceCritique = workerData.SpaceCritique;
+var subWorker = new code.ConsProg(hostname, startPort + indice);
 
 // Data du worker
 var debcons = 0;
@@ -34,7 +31,7 @@ var ifinprod = 0;
 var req_en_cours = false;
 var sc_en_cours = false;
 
-// ACQUISITION a voir si on l'utilise ! ! ! !  !! 
+// ACQUISITION 
 app.post('/ACQ', (req, res) => {
   const value = req.body;
   if (!req_en_cours) {
@@ -62,6 +59,14 @@ app.post('/MAJ', (req, res) => { ifinprod = req.body.horloge; })
 app.listen(HTTPport, () => { console.log(`Worker Site Consomation number ${indice} is running on http://${hostname}:${HTTPport}`) })
 
 
+/**
+ * Envoie pour mettre à jour 
+ *
+ * @async
+ * @param {*} newval
+ * @param {*} info
+ * @returns {*}
+ */
 async function send_maj(newval, info) {
 
   const token = new obj.request_obj("MAJ", indice, newval, info)
@@ -83,10 +88,16 @@ async function send_maj(newval, info) {
 }
 
 
+/**
+ * requete aléatoire 
+ */
 function request_aleatoire() { if (!req_en_cours) { req_en_cours = true } }
 
 
 
+/**
+ * Description placeholder
+ */
 function Msg_dbt_sc() {
   // TO DO ! 
   //console.log(`[Worker Cons ${indice}] : Section Critique `)
@@ -98,6 +109,9 @@ function Msg_dbt_sc() {
 
 }
 
+/**
+ * Fonction permettant de commencer aléatoirement
+ */
 function start() {
   setTimeout(() => { start() }, 500)
   setTimeout(() => { request_aleatoire() }, 500)
@@ -109,9 +123,6 @@ function start() {
     subWorker.sectionCritique()
     sc_en_cours = true
   }
-
-
 }
-
 
 start();

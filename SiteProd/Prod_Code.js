@@ -1,21 +1,42 @@
 // Code du worker
 var obj = require("../request-obj.js");
-
 const { randomInt } = require("crypto");
 
+/**
+ * Classe d'un producteur 
+ *
+ * @class ProdProg
+ * @typedef {ProdProg}
+ */
 class ProdProg {
 
+    /**
+     * Creation d'un producteur 
+     *
+     * @constructor
+     * @param {*} hostname
+     * @param {*} sitePort
+     */
     constructor(hostname,sitePort) {
         this.hostname = hostname;
         this.sitePort = sitePort;
      }
 
+    /**
+     * Section Critique 
+     *
+     * @async
+     * @returns {*}
+     */
     async sectionCritique(){
 
         setTimeout(() => { this.end() }, 500)//randomInt(500)*2)
       
     }
 
+    /**
+     * Envoie la fin de la section critique au Producteur 
+     */
     end(){
         const token = new obj.request_obj("FINSC", "", "", "")
         fetch(
