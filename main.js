@@ -34,7 +34,7 @@ class myWorker {
     this.startPort = startPort
     this.worker = undefined;
     this.numberofprocessus = numberOfWorkers;
-    this.SpaceCritique = SpaceCritique
+    this.SpaceCritique = SpaceCritique;
 
   }
 
